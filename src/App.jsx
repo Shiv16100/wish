@@ -2,87 +2,75 @@ import { useState, useEffect } from 'react'
 import { Plus, Star, Trash2, Check, Calendar, Tag, AlertCircle } from 'lucide-react'
 import './App.css'
 
-const SHARED_WISHLIST_ID = 'radhika-shivesh-wishlist-2024'
+const STORAGE_KEY = 'radhika-shivesh-wishlist'
 
 function App() {
   const [wishes, setWishes] = useState([])
   const [newWish, setNewWish] = useState('')
   const [newCategory, setNewCategory] = useState('')
   const [filter, setFilter] = useState('all')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Load wishes from cloud storage on mount
+  // Load wishes on mount and set up periodic sync
   useEffect(() => {
-    loadWishesFromCloud()
+    loadWishes()
+    // Check for updates every 5 seconds
+    const interval = setInterval(loadWishes, 5000)
+    return () => clearInterval(interval)
   }, [])
 
-  // Auto-save to cloud whenever wishes change
+  // Save wishes whenever they change
   useEffect(() => {
     if (wishes.length >= 0) {
-      saveWishesToCloud()
+      saveWishes()
     }
   }, [wishes])
 
-  const loadWishesFromCloud = async () => {
-    setLoading(true)
+  const loadWishes = async () => {
     try {
-      const response = await fetch(`https://api.jsonbin.io/v3/b/${SHARED_WISHLIST_ID}/latest`, {
-        headers: {
-          'X-Master-Key': '$2a$10$demo.key.for.wishlist.app'
-        }
-      })
-
+      // Try to load from the shared file on GitHub
+      const response = await fetch('https://raw.githubusercontent.com/Shiv16100/wish/main/public/shared-wishlist.json?' + Date.now())
       if (response.ok) {
         const data = await response.json()
-        if (data.record && data.record.wishes) {
-          setWishes(data.record.wishes)
-          localStorage.setItem('radhika-shivesh-wishlist', JSON.stringify(data.record.wishes))
-        }
-      } else {
-        // Fallback to localStorage if cloud fails
-        const savedWishes = localStorage.getItem('radhika-shivesh-wishlist')
-        if (savedWishes) {
-          setWishes(JSON.parse(savedWishes))
+        if (data && data.wishes && Array.isArray(data.wishes)) {
+          // Only update if the data is different
+          const currentWishesStr = JSON.stringify(wishes)
+          const newWishesStr = JSON.stringify(data.wishes)
+          if (currentWishesStr !== newWishesStr) {
+            setWishes(data.wishes)
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.wishes))
+          }
+          setError(null)
+          return
         }
       }
-      setError(null)
     } catch (err) {
-      console.error('Failed to load from cloud:', err)
-      // Fallback to localStorage
-      const savedWishes = localStorage.getItem('radhika-shivesh-wishlist')
-      if (savedWishes) {
-        setWishes(JSON.parse(savedWishes))
+      console.log('Failed to load from shared storage:', err)
+    }
+
+    // Fallback to localStorage if shared storage fails
+    const savedWishes = localStorage.getItem(STORAGE_KEY)
+    if (savedWishes && wishes.length === 0) {
+      try {
+        const parsed = JSON.parse(savedWishes)
+        setWishes(Array.isArray(parsed) ? parsed : [])
+      } catch (e) {
+        setWishes([])
       }
-      setError('Using offline mode - changes will sync when online')
-    } finally {
-      setLoading(false)
+    }
+
+    if (!error) {
+      setError('Using local storage - for cross-device sync, see instructions below')
     }
   }
 
-  const saveWishesToCloud = async () => {
-    try {
-      await fetch(`https://api.jsonbin.io/v3/b/${SHARED_WISHLIST_ID}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': '$2a$10$demo.key.for.wishlist.app'
-        },
-        body: JSON.stringify({
-          wishes: wishes,
-          lastUpdated: new Date().toISOString()
-        })
-      })
+  const saveWishes = () => {
+    // Save to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes))
 
-      // Also save to localStorage as backup
-      localStorage.setItem('radhika-shivesh-wishlist', JSON.stringify(wishes))
-      setError(null)
-    } catch (err) {
-      console.error('Failed to save to cloud:', err)
-      // Still save to localStorage
-      localStorage.setItem('radhika-shivesh-wishlist', JSON.stringify(wishes))
-      setError('Saved locally - will sync when online')
-    }
+    // Note: To enable cross-device sync, the shared-wishlist.json file
+    // needs to be updated on GitHub. This requires manual setup.
+    console.log('Wishes saved locally. For cross-device sync, see setup instructions.')
   }
 
   const addWish = () => {
@@ -143,9 +131,12 @@ function App() {
           <p className="subtitle">Dream big, achieve bigger ✨</p>
 
           {error && (
-            <div className="error-message">
+            <div className="info-message">
               <AlertCircle size={16} />
               {error}
+              <a href="./CROSS_DEVICE_SETUP.md" target="_blank" style={{color: 'white', textDecoration: 'underline', marginLeft: '10px'}}>
+                Setup Guide
+              </a>
             </div>
           )}
         </header>
@@ -170,9 +161,9 @@ function App() {
               onKeyDown={handleKeyDown}
               disabled={loading}
             />
-            <button onClick={addWish} className="add-button" disabled={loading}>
+            <button onClick={addWish} className="add-button">
               <Plus size={20} />
-              {loading ? 'Adding...' : 'Add Wish'}
+              Add Wish
             </button>
           </div>
         </div>

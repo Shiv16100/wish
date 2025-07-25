@@ -54,6 +54,19 @@
   backdrop-filter: blur(10px);
 }
 
+.info-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(23, 162, 184, 0.9);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+}
+
 
 
 /* Add Wish Form */
