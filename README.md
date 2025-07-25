@@ -1,6 +1,6 @@
-# 🌟 My Wishlist & Bucket List
+# 🌟 The Wishlist of Radhika and Shivesh
 
-A beautiful, modern web application to track your dreams, goals, and bucket list items. Built with React and Vite for a fast, responsive experience.
+A beautiful, modern web application to track dreams, goals, and bucket list items. Built with React and Vite for a fast, responsive experience with cross-device synchronization.
 
 ![Wishlist App](https://img.shields.io/badge/React-18+-blue.svg)
 ![Vite](https://img.shields.io/badge/Vite-5+-green.svg)
@@ -13,7 +13,8 @@ A beautiful, modern web application to track your dreams, goals, and bucket list
 - **Priority System**: Mark important wishes with a star
 - **Progress Tracking**: Mark wishes as completed when achieved
 - **Categories**: Organize wishes by different categories
-- **Local Storage**: Your wishes are saved locally in your browser
+- **Cross-Device Sync**: Share your wishlist across multiple devices with sync codes
+- **Offline Support**: Works offline with local storage backup
 - **Responsive Design**: Works perfectly on desktop and mobile
 - **Filter Options**: View all, pending, completed, or priority wishes
 
@@ -98,6 +99,21 @@ Your app will be available at: `https://YOUR_GITHUB_USERNAME.github.io/wish`
 4. **Delete a Wish**: Click the trash icon to remove a wish
 5. **Filter Wishes**: Use the filter buttons to view specific types of wishes
 6. **Categories**: View all your categories at the bottom of the page
+
+## 🔄 Cross-Device Synchronization
+
+### To sync across devices:
+
+1. **Create a Sync Code**: Click "Create Sync Code" on your first device
+2. **Share the Code**: A 6-character code will be generated (e.g., ABC123)
+3. **Join on Other Devices**: On other devices, click "Join Existing" and enter the code
+4. **Automatic Sync**: Your wishes will now sync automatically across all connected devices!
+
+### Features:
+- **Real-time sync**: Changes appear instantly on all devices
+- **Offline support**: Works offline, syncs when back online
+- **Simple sharing**: Just share a 6-character code
+- **No account needed**: No registration or login required
 
 ## 🎨 Customization
 

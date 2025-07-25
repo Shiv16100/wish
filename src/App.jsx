@@ -1,56 +1,55 @@
-import { useState, useEffect } from 'react'
-import { Plus, Star, Trash2, Check, Calendar, Tag } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, Star, Trash2, Check, Calendar, Tag, Share2, Smartphone, AlertCircle, RefreshCw } from 'lucide-react'
+import { useSimpleSync } from './hooks/useSimpleSync'
 import './App.css'
 
 function App() {
-  const [wishes, setWishes] = useState([])
+  const {
+    wishes,
+    loading,
+    error,
+    syncCode,
+    addWish,
+    toggleComplete,
+    togglePriority,
+    deleteWish,
+    createSyncCode,
+    joinWithSyncCode,
+    syncFromCloud
+  } = useSimpleSync()
+
   const [newWish, setNewWish] = useState('')
   const [newCategory, setNewCategory] = useState('')
   const [filter, setFilter] = useState('all')
+  const [showSync, setShowSync] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
 
-  // Load wishes from localStorage on component mount
-  useEffect(() => {
-    const savedWishes = localStorage.getItem('wishlist')
-    if (savedWishes) {
-      setWishes(JSON.parse(savedWishes))
-    }
-  }, [])
-
-  // Save wishes to localStorage whenever wishes change
-  useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishes))
-  }, [wishes])
-
-  const addWish = () => {
+  const handleAddWish = () => {
     if (newWish.trim()) {
-      const wish = {
-        id: Date.now(),
-        text: newWish.trim(),
-        category: newCategory.trim() || 'General',
-        completed: false,
-        createdAt: new Date().toLocaleDateString(),
-        priority: false
-      }
-      setWishes([...wishes, wish])
+      addWish(newWish, newCategory)
       setNewWish('')
       setNewCategory('')
     }
   }
 
-  const toggleComplete = (id) => {
-    setWishes(wishes.map(wish =>
-      wish.id === id ? { ...wish, completed: !wish.completed } : wish
-    ))
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleAddWish()
+    }
   }
 
-  const togglePriority = (id) => {
-    setWishes(wishes.map(wish =>
-      wish.id === id ? { ...wish, priority: !wish.priority } : wish
-    ))
+  const handleCreateSync = async () => {
+    const code = await createSyncCode()
+    alert(`Sync code created: ${code}\nShare this code with other devices to sync your wishlist!`)
   }
 
-  const deleteWish = (id) => {
-    setWishes(wishes.filter(wish => wish.id !== id))
+  const handleJoinSync = async () => {
+    if (joinCode.trim()) {
+      await joinWithSyncCode(joinCode.trim())
+      setJoinCode('')
+      setShowSync(false)
+      alert('Successfully connected to shared wishlist!')
+    }
   }
 
   const filteredWishes = wishes.filter(wish => {
@@ -68,9 +67,55 @@ function App() {
         <header className="header">
           <h1 className="title">
             <Star className="title-icon" />
-            My Wishlist & Bucket List
+            The Wishlist of Radhika and Shivesh
           </h1>
           <p className="subtitle">Dream big, achieve bigger ✨</p>
+
+          <div className="sync-section">
+            {syncCode ? (
+              <div className="sync-status">
+                <Smartphone size={16} />
+                <span>Sync Code: <strong>{syncCode}</strong></span>
+                <button onClick={syncFromCloud} className="sync-refresh-btn" disabled={loading}>
+                  <RefreshCw size={14} />
+                </button>
+              </div>
+            ) : (
+              <div className="sync-actions">
+                <button onClick={handleCreateSync} className="sync-btn" disabled={loading}>
+                  <Share2 size={16} />
+                  Create Sync Code
+                </button>
+                <button onClick={() => setShowSync(!showSync)} className="sync-btn" disabled={loading}>
+                  <Smartphone size={16} />
+                  Join Existing
+                </button>
+              </div>
+            )}
+          </div>
+
+          {showSync && !syncCode && (
+            <div className="join-sync-form">
+              <input
+                type="text"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                placeholder="Enter sync code (e.g., ABC123)"
+                className="sync-input"
+                maxLength={6}
+              />
+              <button onClick={handleJoinSync} className="join-btn" disabled={!joinCode.trim() || loading}>
+                Join
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <div className="error-message">
+              <AlertCircle size={16} />
+              {error}
+            </div>
+          )}
         </header>
 
         <div className="add-wish-form">
@@ -81,7 +126,8 @@ function App() {
               onChange={(e) => setNewWish(e.target.value)}
               placeholder="What's your next dream or goal?"
               className="wish-input"
-              onKeyPress={(e) => e.key === 'Enter' && addWish()}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
             />
             <input
               type="text"
@@ -89,11 +135,12 @@ function App() {
               onChange={(e) => setNewCategory(e.target.value)}
               placeholder="Category (optional)"
               className="category-input"
-              onKeyPress={(e) => e.key === 'Enter' && addWish()}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
             />
-            <button onClick={addWish} className="add-button">
+            <button onClick={handleAddWish} className="add-button" disabled={loading}>
               <Plus size={20} />
-              Add Wish
+              {loading ? 'Adding...' : 'Add Wish'}
             </button>
           </div>
         </div>
