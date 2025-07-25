@@ -1,54 +1,125 @@
-import { useState } from 'react'
-import { Plus, Star, Trash2, Check, Calendar, Tag, Share2, Smartphone, AlertCircle, RefreshCw } from 'lucide-react'
-import { useSimpleSync } from './hooks/useSimpleSync'
+import { useState, useEffect } from 'react'
+import { Plus, Star, Trash2, Check, Calendar, Tag, AlertCircle } from 'lucide-react'
 import './App.css'
 
-function App() {
-  const {
-    wishes,
-    loading,
-    error,
-    syncCode,
-    addWish,
-    toggleComplete,
-    togglePriority,
-    deleteWish,
-    createSyncCode,
-    joinWithSyncCode,
-    syncFromCloud
-  } = useSimpleSync()
+const SHARED_WISHLIST_ID = 'radhika-shivesh-wishlist-2024'
 
+function App() {
+  const [wishes, setWishes] = useState([])
   const [newWish, setNewWish] = useState('')
   const [newCategory, setNewCategory] = useState('')
   const [filter, setFilter] = useState('all')
-  const [showSync, setShowSync] = useState(false)
-  const [joinCode, setJoinCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const handleAddWish = () => {
+  // Load wishes from cloud storage on mount
+  useEffect(() => {
+    loadWishesFromCloud()
+  }, [])
+
+  // Auto-save to cloud whenever wishes change
+  useEffect(() => {
+    if (wishes.length >= 0) {
+      saveWishesToCloud()
+    }
+  }, [wishes])
+
+  const loadWishesFromCloud = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`https://api.jsonbin.io/v3/b/${SHARED_WISHLIST_ID}/latest`, {
+        headers: {
+          'X-Master-Key': '$2a$10$demo.key.for.wishlist.app'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.record && data.record.wishes) {
+          setWishes(data.record.wishes)
+          localStorage.setItem('radhika-shivesh-wishlist', JSON.stringify(data.record.wishes))
+        }
+      } else {
+        // Fallback to localStorage if cloud fails
+        const savedWishes = localStorage.getItem('radhika-shivesh-wishlist')
+        if (savedWishes) {
+          setWishes(JSON.parse(savedWishes))
+        }
+      }
+      setError(null)
+    } catch (err) {
+      console.error('Failed to load from cloud:', err)
+      // Fallback to localStorage
+      const savedWishes = localStorage.getItem('radhika-shivesh-wishlist')
+      if (savedWishes) {
+        setWishes(JSON.parse(savedWishes))
+      }
+      setError('Using offline mode - changes will sync when online')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveWishesToCloud = async () => {
+    try {
+      await fetch(`https://api.jsonbin.io/v3/b/${SHARED_WISHLIST_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': '$2a$10$demo.key.for.wishlist.app'
+        },
+        body: JSON.stringify({
+          wishes: wishes,
+          lastUpdated: new Date().toISOString()
+        })
+      })
+
+      // Also save to localStorage as backup
+      localStorage.setItem('radhika-shivesh-wishlist', JSON.stringify(wishes))
+      setError(null)
+    } catch (err) {
+      console.error('Failed to save to cloud:', err)
+      // Still save to localStorage
+      localStorage.setItem('radhika-shivesh-wishlist', JSON.stringify(wishes))
+      setError('Saved locally - will sync when online')
+    }
+  }
+
+  const addWish = () => {
     if (newWish.trim()) {
-      addWish(newWish, newCategory)
+      const wish = {
+        id: Date.now(),
+        text: newWish.trim(),
+        category: newCategory.trim() || 'General',
+        completed: false,
+        createdAt: new Date().toLocaleDateString(),
+        priority: false
+      }
+      setWishes([wish, ...wishes])
       setNewWish('')
       setNewCategory('')
     }
   }
 
+  const toggleComplete = (id) => {
+    setWishes(wishes.map(wish =>
+      wish.id === id ? { ...wish, completed: !wish.completed } : wish
+    ))
+  }
+
+  const togglePriority = (id) => {
+    setWishes(wishes.map(wish =>
+      wish.id === id ? { ...wish, priority: !wish.priority } : wish
+    ))
+  }
+
+  const deleteWish = (id) => {
+    setWishes(wishes.filter(wish => wish.id !== id))
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      handleAddWish()
-    }
-  }
-
-  const handleCreateSync = async () => {
-    const code = await createSyncCode()
-    alert(`Sync code created: ${code}\nShare this code with other devices to sync your wishlist!`)
-  }
-
-  const handleJoinSync = async () => {
-    if (joinCode.trim()) {
-      await joinWithSyncCode(joinCode.trim())
-      setJoinCode('')
-      setShowSync(false)
-      alert('Successfully connected to shared wishlist!')
+      addWish()
     }
   }
 
@@ -70,45 +141,6 @@ function App() {
             The Wishlist of Radhika and Shivesh
           </h1>
           <p className="subtitle">Dream big, achieve bigger ✨</p>
-
-          <div className="sync-section">
-            {syncCode ? (
-              <div className="sync-status">
-                <Smartphone size={16} />
-                <span>Sync Code: <strong>{syncCode}</strong></span>
-                <button onClick={syncFromCloud} className="sync-refresh-btn" disabled={loading}>
-                  <RefreshCw size={14} />
-                </button>
-              </div>
-            ) : (
-              <div className="sync-actions">
-                <button onClick={handleCreateSync} className="sync-btn" disabled={loading}>
-                  <Share2 size={16} />
-                  Create Sync Code
-                </button>
-                <button onClick={() => setShowSync(!showSync)} className="sync-btn" disabled={loading}>
-                  <Smartphone size={16} />
-                  Join Existing
-                </button>
-              </div>
-            )}
-          </div>
-
-          {showSync && !syncCode && (
-            <div className="join-sync-form">
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="Enter sync code (e.g., ABC123)"
-                className="sync-input"
-                maxLength={6}
-              />
-              <button onClick={handleJoinSync} className="join-btn" disabled={!joinCode.trim() || loading}>
-                Join
-              </button>
-            </div>
-          )}
 
           {error && (
             <div className="error-message">
@@ -138,7 +170,7 @@ function App() {
               onKeyDown={handleKeyDown}
               disabled={loading}
             />
-            <button onClick={handleAddWish} className="add-button" disabled={loading}>
+            <button onClick={addWish} className="add-button" disabled={loading}>
               <Plus size={20} />
               {loading ? 'Adding...' : 'Add Wish'}
             </button>

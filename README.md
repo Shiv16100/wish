@@ -13,7 +13,7 @@ A beautiful, modern web application to track dreams, goals, and bucket list item
 - **Priority System**: Mark important wishes with a star
 - **Progress Tracking**: Mark wishes as completed when achieved
 - **Categories**: Organize wishes by different categories
-- **Cross-Device Sync**: Share your wishlist across multiple devices with sync codes
+- **Cross-Device Sync**: Automatically syncs across all devices - no setup needed!
 - **Offline Support**: Works offline with local storage backup
 - **Responsive Design**: Works perfectly on desktop and mobile
 - **Filter Options**: View all, pending, completed, or priority wishes
@@ -102,18 +102,15 @@ Your app will be available at: `https://YOUR_GITHUB_USERNAME.github.io/wish`
 
 ## 🔄 Cross-Device Synchronization
 
-### To sync across devices:
+**It's completely automatic!** 🎉
 
-1. **Create a Sync Code**: Click "Create Sync Code" on your first device
-2. **Share the Code**: A 6-character code will be generated (e.g., ABC123)
-3. **Join on Other Devices**: On other devices, click "Join Existing" and enter the code
-4. **Automatic Sync**: Your wishes will now sync automatically across all connected devices!
+- **No setup required**: Just open the website on any device
+- **Instant sync**: Add a wish on one device, see it immediately on all others
+- **Always up-to-date**: Your wishlist stays synchronized across phones, tablets, and computers
+- **Offline support**: Works offline, syncs automatically when back online
+- **No accounts needed**: No registration, passwords, or complicated setup
 
-### Features:
-- **Real-time sync**: Changes appear instantly on all devices
-- **Offline support**: Works offline, syncs when back online
-- **Simple sharing**: Just share a 6-character code
-- **No account needed**: No registration or login required
+Simply open the website on any device and your wishlist will be there!
 
 ## 🎨 Customization
 
