@@ -13,7 +13,7 @@ A beautiful, modern web application to track dreams, goals, and bucket list item
 - **Priority System**: Mark important wishes with a star
 - **Progress Tracking**: Mark wishes as completed when achieved
 - **Categories**: Organize wishes by different categories
-- **Cross-Device Sync**: Automatically syncs across all devices - no setup needed!
+- **Real-Time Sync**: Firebase-powered real-time synchronization across all devices
 - **Offline Support**: Works offline with local storage backup
 - **Responsive Design**: Works perfectly on desktop and mobile
 - **Filter Options**: View all, pending, completed, or priority wishes
@@ -100,17 +100,26 @@ Your app will be available at: `https://YOUR_GITHUB_USERNAME.github.io/wish`
 5. **Filter Wishes**: Use the filter buttons to view specific types of wishes
 6. **Categories**: View all your categories at the bottom of the page
 
-## 🔄 Cross-Device Synchronization
+## 🔥 Firebase Real-Time Synchronization
 
-**It's completely automatic!** 🎉
+**Powered by Firebase for instant cross-device sync!** 🎉
 
-- **No setup required**: Just open the website on any device
-- **Instant sync**: Add a wish on one device, see it immediately on all others
-- **Always up-to-date**: Your wishlist stays synchronized across phones, tablets, and computers
-- **Offline support**: Works offline, syncs automatically when back online
-- **No accounts needed**: No registration, passwords, or complicated setup
+### Features:
+- **Real-time updates**: Changes appear instantly on all devices
+- **Offline support**: Works offline, syncs when connection returns
+- **No data loss**: Firebase handles all the complexity
+- **Unlimited devices**: Works on phones, tablets, computers
+- **Automatic backups**: Your data is safely stored in the cloud
 
-Simply open the website on any device and your wishlist will be there!
+### Setup:
+1. **One-time setup**: Follow the [Firebase Setup Guide](./FIREBASE_SETUP_GUIDE.md) (5 minutes)
+2. **Instant sync**: Add a wish on one device, see it immediately on all others
+3. **Always connected**: Your wishlist stays synchronized everywhere
+
+**Status Indicator**: The app shows your connection status:
+- 🟢 **Live sync active** - Real-time sync working
+- 🟡 **Offline mode** - Using local storage, will sync when online
+- 🔵 **Connecting** - Establishing connection to Firebase
 
 ## 🎨 Customization
 

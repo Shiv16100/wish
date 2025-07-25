@@ -67,6 +67,51 @@
   backdrop-filter: blur(10px);
 }
 
+/* Firebase Sync Status */
+.sync-status {
+  margin-top: 20px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.status-indicator.online {
+  background: rgba(40, 167, 69, 0.9);
+  color: white;
+}
+
+.status-indicator.offline {
+  background: rgba(255, 193, 7, 0.9);
+  color: #212529;
+}
+
+.status-indicator.loading {
+  background: rgba(23, 162, 184, 0.9);
+  color: white;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 
 
 /* Add Wish Form */

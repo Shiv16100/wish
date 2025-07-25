@@ -1,113 +1,34 @@
-import { useState, useEffect } from 'react'
-import { Plus, Star, Trash2, Check, Calendar, Tag, AlertCircle } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, Star, Trash2, Check, Calendar, Tag, AlertCircle, Wifi, WifiOff } from 'lucide-react'
+import { useFirebaseWishes } from './hooks/useFirebaseWishes'
 import './App.css'
 
-const STORAGE_KEY = 'radhika-shivesh-wishlist'
-
 function App() {
-  const [wishes, setWishes] = useState([])
+  const {
+    wishes,
+    loading,
+    error,
+    addWish: addWishToFirebase,
+    toggleComplete,
+    togglePriority,
+    deleteWish
+  } = useFirebaseWishes()
+
   const [newWish, setNewWish] = useState('')
   const [newCategory, setNewCategory] = useState('')
   const [filter, setFilter] = useState('all')
-  const [error, setError] = useState(null)
 
-  // Load wishes on mount and set up periodic sync
-  useEffect(() => {
-    loadWishes()
-    // Check for updates every 5 seconds
-    const interval = setInterval(loadWishes, 5000)
-    return () => clearInterval(interval)
-  }, [])
-
-  // Save wishes whenever they change
-  useEffect(() => {
-    if (wishes.length >= 0) {
-      saveWishes()
-    }
-  }, [wishes])
-
-  const loadWishes = async () => {
-    try {
-      // Try to load from the shared file on GitHub
-      const response = await fetch('https://raw.githubusercontent.com/Shiv16100/wish/main/public/shared-wishlist.json?' + Date.now())
-      if (response.ok) {
-        const data = await response.json()
-        if (data && data.wishes && Array.isArray(data.wishes)) {
-          // Only update if the data is different
-          const currentWishesStr = JSON.stringify(wishes)
-          const newWishesStr = JSON.stringify(data.wishes)
-          if (currentWishesStr !== newWishesStr) {
-            setWishes(data.wishes)
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.wishes))
-          }
-          setError(null)
-          return
-        }
-      }
-    } catch (err) {
-      console.log('Failed to load from shared storage:', err)
-    }
-
-    // Fallback to localStorage if shared storage fails
-    const savedWishes = localStorage.getItem(STORAGE_KEY)
-    if (savedWishes && wishes.length === 0) {
-      try {
-        const parsed = JSON.parse(savedWishes)
-        setWishes(Array.isArray(parsed) ? parsed : [])
-      } catch (e) {
-        setWishes([])
-      }
-    }
-
-    if (!error) {
-      setError('Using local storage - for cross-device sync, see instructions below')
-    }
-  }
-
-  const saveWishes = () => {
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes))
-
-    // Note: To enable cross-device sync, the shared-wishlist.json file
-    // needs to be updated on GitHub. This requires manual setup.
-    console.log('Wishes saved locally. For cross-device sync, see setup instructions.')
-  }
-
-  const addWish = () => {
+  const handleAddWish = async () => {
     if (newWish.trim()) {
-      const wish = {
-        id: Date.now(),
-        text: newWish.trim(),
-        category: newCategory.trim() || 'General',
-        completed: false,
-        createdAt: new Date().toLocaleDateString(),
-        priority: false
-      }
-      setWishes([wish, ...wishes])
+      await addWishToFirebase(newWish, newCategory)
       setNewWish('')
       setNewCategory('')
     }
   }
 
-  const toggleComplete = (id) => {
-    setWishes(wishes.map(wish =>
-      wish.id === id ? { ...wish, completed: !wish.completed } : wish
-    ))
-  }
-
-  const togglePriority = (id) => {
-    setWishes(wishes.map(wish =>
-      wish.id === id ? { ...wish, priority: !wish.priority } : wish
-    ))
-  }
-
-  const deleteWish = (id) => {
-    setWishes(wishes.filter(wish => wish.id !== id))
-  }
-
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      addWish()
+      handleAddWish()
     }
   }
 
@@ -130,15 +51,24 @@ function App() {
           </h1>
           <p className="subtitle">Dream big, achieve bigger ✨</p>
 
-          {error && (
-            <div className="info-message">
-              <AlertCircle size={16} />
-              {error}
-              <a href="./CROSS_DEVICE_SETUP.md" target="_blank" style={{color: 'white', textDecoration: 'underline', marginLeft: '10px'}}>
-                Setup Guide
-              </a>
-            </div>
-          )}
+          <div className="sync-status">
+            {loading ? (
+              <div className="status-indicator loading">
+                <div className="spinner"></div>
+                <span>Connecting to cloud...</span>
+              </div>
+            ) : error ? (
+              <div className="status-indicator offline">
+                <WifiOff size={16} />
+                <span>Offline mode - {error}</span>
+              </div>
+            ) : (
+              <div className="status-indicator online">
+                <Wifi size={16} />
+                <span>Live sync active - changes appear instantly on all devices!</span>
+              </div>
+            )}
+          </div>
         </header>
 
         <div className="add-wish-form">
@@ -161,9 +91,9 @@ function App() {
               onKeyDown={handleKeyDown}
               disabled={loading}
             />
-            <button onClick={addWish} className="add-button">
+            <button onClick={handleAddWish} className="add-button" disabled={loading}>
               <Plus size={20} />
-              Add Wish
+              {loading ? 'Adding...' : 'Add Wish'}
             </button>
           </div>
         </div>
